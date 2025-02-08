@@ -16,8 +16,9 @@ StopKey = "esc"
 AppTitle = "CROSSFIRE"
 
 # Advanced
-ClickDurationRange = (0.3, 1)
+ClickDurationRange = (0.1, 0.3)
 HumanMoveDuration = (0.3, 0.1) # Random movement duration range
+InstantMove = True
 
 # Human Curve
 UseHumanCurve = False
@@ -145,11 +146,11 @@ def MoveMouse(TargetPosition):
         return
 
 # Mouse Input 
-def MouseClick():
+def MouseClick(TargetPosition):
     # Random mouse click duration
     ClickDuration = random.uniform(*ClickDurationRange) -CPU_Time
     # Mouse down
-    pyautogui.mouseDown()
+    pyautogui.mouseDown(TargetPosition)
 
     # Add small movements during click hold
     StartTime = time.time()
@@ -162,7 +163,7 @@ def MouseClick():
         )
         time.sleep(MinCPU_Delay)
     
-    pyautogui.mouseUp()
+    pyautogui.mouseUp(TargetPosition)
   
 # Focus on App Window
 def FocusOnWindow():
@@ -258,12 +259,12 @@ def GetInputEventsFromFile(filename):
             if not line:
                 continue
             parts = [part.strip() for part in line.split(',')]
-            if len(parts) != 4:
+            if len(parts) != 3:
                 print(f"Skipping invalid line {line_num}: {line}")
                 continue
             try:
-                x, y, action, delay = parts
-                events.append((int(x), int(y), action, int(delay)))
+                x, y, action = parts
+                events.append((int(x), int(y), action))
             except ValueError:
                 print(f"Skipping line {line_num} with invalid format: {line}")
 
@@ -303,15 +304,23 @@ def SimulateInputEvents(Events, Loops):
                     time.sleep(2)
                     continue
 
-                XPosition, YPosition, Action, Duration= Event
-                #print(f"Event {EventCount} : Moving to ({XPosition}, {YPosition} - {Action})", end = '\r')
+                X, Y, Action= Event
+
+                # Screen Size
+                ScreenWidth, ScreenHeight = pyautogui.size()
+                ScreenWidth //= 2  # Divide by 2 to get center
+                ScreenHeight //= 2
+
+                # Compute target position
+                TargetPosition = (ScreenWidth + X, ScreenHeight + Y)
                 
-                # Move Mouse
-                MoveMouse((XPosition, YPosition))
+                if not InstantMove:
+                  # Move Mouse
+                  MoveMouse(TargetPosition)
 
                 # Mouse Action
                 if Action == 'Left Click':
-                    MouseClick()              
+                    MouseClick(TargetPosition)              
 
    # On the end unhook stop key.
    finally:
@@ -340,7 +349,7 @@ def main():
       # Try to refresh the app window
 
       RefreshAppWindow()
-      
+
       # Get Loops count
       try:
          Loops = int(input("\nEnter number of loops (0 for infinite): "))

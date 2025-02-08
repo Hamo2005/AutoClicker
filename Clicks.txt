@@ -1,19 +1,19 @@
-1273, 676, Left Click, 1
-770, 450, Left Click, 1
-670, 450, Left Click, 1
-770, 425, Left Click, 1
-670, 475, Left Click, 1
-770, 475, Left Click, 1
-670, 425, Left Click, 1
-720, 400, Left Click, 1
-720, 500, Left Click, 1
-745, 400, Left Click, 1
-695, 500, Left Click, 1
-695, 400, Left Click, 1
-745, 500, Left Click, 1
-770, 400, Left Click, 1
-670, 500, Left Click, 1
-670, 400, Left Click, 1
-770, 500, Left Click, 1
-720, 570, Left Click, 1
-1001, 748, Left Click, 1
+553, 226, Left Click
+50, 0, Left Click
+-50, 0, Left Click
+50, -25, Left Click
+-50, 25, Left Click
+50, 25, Left Click
+-50, -25, Left Click
+0, -50, Left Click
+0, 50, Left Click
+25, -50, Left Click
+-25, 50, Left Click
+-25, -50, Left Click
+25, 50, Left Click
+50, -50, Left Click
+-50, 50, Left Click
+-50, -50, Left Click
+50, 50, Left Click
+0, 120, Left Click
+281, 298, Left Click
