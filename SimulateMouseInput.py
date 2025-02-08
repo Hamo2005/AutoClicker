@@ -18,10 +18,9 @@ AppTitle = "CROSSFIRE"
 # Advanced
 ClickDurationRange = (0.1, 0.3)
 HumanMoveDuration = (0.3, 0.1) # Random movement duration range
-InstantMove = True
+InstantMove = False
 
 # Human Curve
-UseHumanCurve = False
 BasePoints = 2 # Minimum number of points
 MaxPoints = 10 # Maximum number of points for long distances
 
@@ -133,17 +132,13 @@ def MoveMouse(TargetPosition):
      return points
 
     MoveDuration = random.uniform(*HumanMoveDuration) -CPU_Time
-    
-    if UseHumanCurve:
-     # Get Points that the mouse will go along them to the target  
-     Points = HumanCurve(pyautogui.position(), TargetPosition)   
-     TimePerPoint = (MoveDuration / len(Points))-CPU_Time
-     for Point in Points:
-        pyautogui.moveTo(*Point, duration=TimePerPoint)
-     return
-    else :
-        pyautogui.moveTo(*TargetPosition, duration= MoveDuration)  
-        return
+
+    # Move like a human so no detection happens  
+    Points = HumanCurve(pyautogui.position(), TargetPosition)   
+    TimePerPoint = (MoveDuration / len(Points))-CPU_Time
+    for Point in Points:
+      pyautogui.moveTo(*Point, duration=TimePerPoint)
+
 
 # Mouse Input 
 def MouseClick(TargetPosition):
