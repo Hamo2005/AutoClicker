@@ -16,8 +16,8 @@ StopKey = "esc"
 AppTitle = "CROSSFIRE"
 
 # Advanced
-ClickDurationRange = (0.05, 0.01)
-HumanMoveDuration = (0.01, 0.5) # Random movement duration range
+ClickDurationRange = (0.3, 1)
+HumanMoveDuration = (0.3, 0.1) # Random movement duration range
 
 # Human Curve
 UseHumanCurve = False
@@ -28,6 +28,8 @@ MaxPoints = 10 # Maximum number of points for long distances
 JitterAmount = 0.7 # Reduce random jitter to prevent excessive slattering
 MicroMovementChance = 0.03 # Less frequent micro-movements
 MinCPU_Delay = 0.001
+CPU_Time = 0.001
+CheckRequiredModules = False
 
 # Functions
 
@@ -102,11 +104,9 @@ def CheckRequirements():
         return False
 
 # Mouse Movement
-
 def MoveMouse(TargetPosition):
 
-    def CalculatePointsNumber(Start, End):
-      """Dynamically adjust the number of points based on distance."""
+    def CalculatePointsNumber(Start, End):    
       Distance = math.dist(Start, End)
       return min(MaxPoints, max(BasePoints, int(Distance / 10)))  # Scale based on distance
 
@@ -131,23 +131,23 @@ def MoveMouse(TargetPosition):
     
      return points
 
-    MoveDuration = random.uniform(*HumanMoveDuration)
+    MoveDuration = random.uniform(*HumanMoveDuration) -CPU_Time
     
     if UseHumanCurve:
      # Get Points that the mouse will go along them to the target  
      Points = HumanCurve(pyautogui.position(), TargetPosition)   
-     TimePerPoint = MoveDuration / len(Points)
+     TimePerPoint = (MoveDuration / len(Points))-CPU_Time
      for Point in Points:
-        pyautogui.moveTo(*Point, TimePerPoint)
+        pyautogui.moveTo(*Point, duration=TimePerPoint)
+     return
     else :
-        pyautogui.moveTo(*TargetPosition, MoveDuration)  
+        pyautogui.moveTo(*TargetPosition, duration= MoveDuration)  
+        return
 
 # Mouse Input 
 def MouseClick():
-
     # Random mouse click duration
-    ClickDuration = random.uniform(*ClickDurationRange)
-
+    ClickDuration = random.uniform(*ClickDurationRange) -CPU_Time
     # Mouse down
     pyautogui.mouseDown()
 
@@ -163,7 +163,7 @@ def MouseClick():
         time.sleep(MinCPU_Delay)
     
     pyautogui.mouseUp()
-   
+  
 # Focus on App Window
 def FocusOnWindow():
        
@@ -295,8 +295,7 @@ def SimulateInputEvents(Events, Loops):
          print(f"\nStarting loop {CurrentLoop}")
 
          for EventCount, Event in enumerate(Events, 1):
-                if LoopBroken:
-                    print("\nStop requested by user!")
+                if LoopBroken:                   
                     return
                 
                 if not FocusOnWindow():
@@ -304,33 +303,15 @@ def SimulateInputEvents(Events, Loops):
                     time.sleep(2)
                     continue
 
-                XPosition, YPosition, Action, Duration = Event
-                print(f"Event {EventCount} : Moving to ({XPosition}, {YPosition} - {Action})", end = '\r')
+                XPosition, YPosition, Action, Duration= Event
+                #print(f"Event {EventCount} : Moving to ({XPosition}, {YPosition} - {Action})", end = '\r')
                 
                 # Move Mouse
                 MoveMouse((XPosition, YPosition))
-                
+
                 # Mouse Action
                 if Action == 'Left Click':
-                    MouseClick()
-
-                # Delay before next action
-                Delay = Duration / 100
-                StartTime = time.time()
-                while (time.time() - StartTime) < Delay and not LoopBroken:                                    
-                    # Random tiny movements during waiting
-                    if random.random() < 0.2:
-                        pyautogui.moveRel(
-                            random.uniform(-2, 2),
-                            random.uniform(-2, 2),
-                            duration=random.uniform(0.05, 0.1)
-                        )
-                    time.sleep(MinCPU_Delay)
-                 
-
-
-
-
+                    MouseClick()              
 
    # On the end unhook stop key.
    finally:
@@ -340,7 +321,8 @@ def SimulateInputEvents(Events, Loops):
 
 def main():
 
-    CheckRequirements()
+    if CheckRequiredModules:
+       CheckRequirements()
 
     try:
       # Provide settings data
@@ -373,6 +355,7 @@ def main():
        time.sleep(1)
       print("GO!")
 
+      print(f"\nRunning Script, Current time: {time.ctime(time.time())}")
       SimulateInputEvents(InputEvents, Loops)
 
     # if any error happened
@@ -385,8 +368,7 @@ def main():
     
     # Ending
     finally:
-        CurrentTime = time.ctime(time.time())  # Converts epoch time to readable format
-        print(f"\nScript finished, Current time: {CurrentTime}")
+        print(f"\nScript finished, Current time: {time.ctime(time.time())}")
         input("Press Enter to exit...")
 
 if __name__ == "__main__":
