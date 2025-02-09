@@ -11,22 +11,21 @@ import traceback
 from win32api import GetSystemMetrics
 
 # Settings
-InputEventsFile = r"E:\AutoClicker\Clicks.txt"
+InputEventsFile = r"E:\AutoClicker\HumanClick.txt"
 StopKey = "esc"
 AppTitle = "CROSSFIRE"
 
 # Advanced
-ClickDurationRange = (0.1, 0.3)
+ClickRange = (0.1, 0.3)
 HumanMoveDuration = (0.3, 0.1) # Random movement duration range
-InstantMove = False
 
 # Human Curve
-BasePoints = 2 # Minimum number of points
-MaxPoints = 10 # Maximum number of points for long distances
+BasePoints = 5 # Minimum number of points
+MaxPoints = 7 # Maximum number of points for long distances
 
 # DO NOT EDIT
-JitterAmount = 0.7 # Reduce random jitter to prevent excessive slattering
-MicroMovementChance = 0.03 # Less frequent micro-movements
+JitterAmount = 0.3  # Reduced to prevent excessive jitter
+MicroMovementChance = 0.05  # Lower chance for micro-movements
 MinCPU_Delay = 0.001
 CPU_Time = 0.001
 CheckRequiredModules = False
@@ -41,125 +40,102 @@ def is_admin():
         return False
 
 if not is_admin():
+    print("Restarting as admin...")
     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
-    sys.exit()
+    sys.exit("Script restarted with admin privileges.")
 
 # Check for Requirments
 def CheckRequirements():
-    import sys
     import subprocess
+    import sys
     import importlib.util
 
-    required_modules = [
-        'pyautogui',
-        'keyboard',
-        'pygetwindow',
-        'win32api',  # part of pywin32
-        'mouse'
-    ]
-
-    def is_module_installed(module_name):
-        return importlib.util.find_spec(module_name) is not None
+    required_modules = ['pyautogui', 'keyboard', 'pygetwindow', 'win32api', 'mouse']
 
     def install_module(module_name):
-        print(f"Installing {module_name}...")
         try:
-            # Special case for pywin32 as it's imported as win32api
-            if module_name == 'win32api':
-                module_to_install = 'pywin32'
-            else:
-                module_to_install = module_name
-
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', module_to_install])
-            print(f"Successfully installed {module_name}")
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', module_name])
             return True
-        except subprocess.CalledProcessError as e:
-            print(f"Failed to install {module_name}. Error: {e}")
+        except subprocess.CalledProcessError:
             return False
 
-    # First ensure pip is installed
-    try:
-        print("Checking pip installation...")
-        subprocess.check_call([sys.executable, '-m', 'ensurepip', '--default-pip'])
-       
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to ensure pip installation. Error: {e}")
-        return False
-
-    # Check and install each required module
-    all_modules_installed = True
     for module in required_modules:
-        if not is_module_installed(module):
-            print(f"{module} is not installed.")
+        if not importlib.util.find_spec(module):
+            print(f"{module} is missing. Installing...")
             if not install_module(module):
-                all_modules_installed = False    
-    
-    # End
-    if all_modules_installed:
-        print("\nAll required modules are installed successfully!")
-        return True
-    else:
-        print("\nSome modules failed to install. Please install them manually:")
-        print("pip install pyautogui keyboard pygetwindow pywin32 mouse")
-        return False
+                print(f"Failed to install {module}. Try installing manually.")
+
+    print("Module check completed.")
 
 # Mouse Movement
-def MoveMouse(TargetPosition):
-
+def HumanMove(Target):
+  
     def CalculatePointsNumber(Start, End):    
       Distance = math.dist(Start, End)
       return min(MaxPoints, max(BasePoints, int(Distance / 10)))  # Scale based on distance
 
+    # Bézier curve implementation
     def HumanCurve(Start, End):
      """Generates a smooth Bezier curve path with fewer points for small distances."""
     
      # Get Points Count
      PointsCount = CalculatePointsNumber(Start, End)
 
-     cp = [
-        (Start[0] + (End[0] - Start[0]) * 0.25, Start[1] + (End[1] - Start[1]) * 0.25),
-        (Start[0] + (End[0] - Start[0]) * 0.75, Start[1] + (End[1] - Start[1]) * 0.75)
-     ]
+     ControlPoints = [
+          (Start[0] + (End[0] - Start[0]) * random.uniform(0.2, 0.4), 
+          Start[1] + (End[1] - Start[1]) * random.uniform(0.2, 0.4)),
+          (Start[0] + (End[0] - Start[0]) * random.uniform(0.6, 0.8), 
+          Start[1] + (End[1] - Start[1]) * random.uniform(0.6, 0.8))
+         ]
 
      points = []
      for t in [i/PointsCount for i in range(PointsCount+1)]:
-        x = (1-t)**3 * Start[0] + 3*(1-t)**2*t*cp[0][0] + 3*(1-t)*t**2*cp[1][0] + t**3*End[0]
-        y = (1-t)**3 * Start[1] + 3*(1-t)**2*t*cp[0][1] + 3*(1-t)*t**2*cp[1][1] + t**3*End[1]
+        x = (1-t)**3 * Start[0] + 3*(1-t)**2*t*ControlPoints[0][0] + 3*(1-t)*t**2*ControlPoints[1][0] + t**3*End[0]
+        y = (1-t)**3 * Start[1] + 3*(1-t)**2*t*ControlPoints[0][1] + 3*(1-t)*t**2*ControlPoints[1][1] + t**3*End[1]
 
         points.append((x + random.uniform(-JitterAmount, JitterAmount),
                        y + random.uniform(-JitterAmount, JitterAmount)))
     
      return points
 
-    MoveDuration = random.uniform(*HumanMoveDuration) -CPU_Time
+    MoveDuration = random.uniform(*HumanMoveDuration)-CPU_Time
 
     # Move like a human so no detection happens  
-    Points = HumanCurve(pyautogui.position(), TargetPosition)   
-    TimePerPoint = (MoveDuration / len(Points))-CPU_Time
+    Points = HumanCurve(pyautogui.position(), Target)   
+    TimePerPoint = max(0.001, (MoveDuration / len(Points)) - CPU_Time)
     for Point in Points:
-      pyautogui.moveTo(*Point, duration=TimePerPoint)
+      pyautogui.moveTo(*Point, duration=0)    
+      time.sleep(TimePerPoint* random.uniform(0.1, 0.9))
 
+      # Occasionally add tiny micro-movements
+      if random.random() < MicroMovementChance:
+            pyautogui.moveRel(
+                random.uniform(-1, 1),
+                random.uniform(-1, 1),
+                duration=random.uniform(0.02, 0.05)
+            )
 
 # Mouse Input 
-def MouseClick(TargetPosition):
+def HumanClick(Target):
     # Random mouse click duration
-    ClickDuration = random.uniform(*ClickDurationRange) -CPU_Time
+    ClickDuration = random.uniform(*ClickRange) - CPU_Time
     # Mouse down
-    pyautogui.mouseDown(TargetPosition)
+    pyautogui.mouseDown()
 
     # Add small movements during click hold
     StartTime = time.time()
     while (time.time() - StartTime) < ClickDuration:
-               
+        time.sleep(MinCPU_Delay)   
         pyautogui.moveRel(
             random.uniform(-0.5, 0.5),
             random.uniform(-0.5, 0.5),
             duration=0.01
         )
-        time.sleep(MinCPU_Delay)
+        
     
-    pyautogui.mouseUp(TargetPosition)
-  
+    pyautogui.mouseUp()
+    # time.sleep(random.uniform(0.03, 0.1))
+ 
 # Focus on App Window
 def FocusOnWindow():
        
@@ -202,7 +178,7 @@ def RefreshAppWindow():
     FoundWindows = gw.getAllTitles()
       
     for WindowTitle in FoundWindows:
-        if WindowTitle == AppTitle:
+        if AppTitle.lower() in WindowTitle.lower():
             windows = gw.getWindowsWithTitle(WindowTitle)
             if windows:  # Check if any windows were found
                 AppWindow = windows[0]  # Store single window object, not list
@@ -273,31 +249,30 @@ def SimulateInputEvents(Events, Loops):
    LoopBroken = False
 
    # Break the loop
-   def BreakInputSimulation():
+   def BreakLoop():
       nonlocal LoopBroken 
       LoopBroken = True
-      print("\nStop requested by user!")
+      print("\n Stopping Now")
 
-   keyboard.add_hotkey(StopKey, BreakInputSimulation)
+   keyboard.add_hotkey(StopKey, BreakLoop)
 
    # Start the simulation Loop
    try:
       # innitialize loop count
       CurrentLoop = 0
       # start the loop
-      while not LoopBroken and (Loops == 0 or CurrentLoop < Loops):       
-         
-         CurrentLoop += 1
-         print(f"\nStarting loop {CurrentLoop}")
+      while not LoopBroken and (Loops == 0 or CurrentLoop < Loops):                
+         CurrentLoop += 1        
 
-         for EventCount, Event in enumerate(Events, 1):
-                if LoopBroken:                   
+         for Event in Events:
+                if LoopBroken:   
+                    print("\nStopped by user request")                
                     return
                 
                 if not FocusOnWindow():
-                    print("Failed to focus app window! Retrying in 2 seconds...")
+                    print("Failed to focus app window!")
                     time.sleep(2)
-                    continue
+                    return
 
                 X, Y, Action= Event
 
@@ -308,14 +283,25 @@ def SimulateInputEvents(Events, Loops):
 
                 # Compute target position
                 TargetPosition = (ScreenWidth + X, ScreenHeight + Y)
-                
-                if not InstantMove:
-                  # Move Mouse
-                  MoveMouse(TargetPosition)
+                               
+                # Move Mouse
+                HumanMove(TargetPosition)
 
                 # Mouse Action
                 if Action == 'Left Click':
-                    MouseClick(TargetPosition)              
+                    HumanClick(TargetPosition)   
+
+               # StartTime = time.time()
+               # while (time.time() - StartTime) < 0.2:
+                #    time.sleep(MinCPU_Delay)  
+                 #   
+                  #  # Random tiny movements during waiting
+                   # if random.random() < 0.2:
+                    #    pyautogui.moveRel(
+                     #       random.uniform(-2, 2),
+                      #      random.uniform(-2, 2),
+                       #     duration=random.uniform(0.05, 0.1)
+                        #)         
 
    # On the end unhook stop key.
    finally:
@@ -329,9 +315,11 @@ def main():
        CheckRequirements()
 
     try:
+      print("IMPORTANT: Don't make a pattern that keeps the mouse same place for too long, so the code doesn't get detected!")
       # Provide settings data
       print(f"\nInput events file: {InputEventsFile}")
       print(f"Stop Key: {StopKey.upper()}")
+      
 
       # Try to ge the events from the given file
       try:
