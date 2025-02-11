@@ -10,25 +10,23 @@ import sys
 import traceback
 from win32api import GetSystemMetrics
 
-# Settings
-InputEventsFile = r"E:\AutoClicker\HumanClick.txt"
+# Configuration
+InputEventsFile = r"E:\AutoClicker\Clicks_V2.txt"
 StopKey = "esc"
-AppTitle = "CROSSFIRE"
 
 # Advanced
-ClickRange = (0.1, 0.3)
-HumanMoveDuration = (0.3, 0.1) # Random movement duration range
+ClickDelay = (0.3, 0.1)
+HumanMoveDuration = (0.01, 0.1) # Random movement duration range
 
 # Human Curve
-BasePoints = 5 # Minimum number of points
+BasePoints = 2 # Minimum number of points
 MaxPoints = 7 # Maximum number of points for long distances
 
 # DO NOT EDIT
-JitterAmount = 0.3  # Reduced to prevent excessive jitter
-MicroMovementChance = 0.05  # Lower chance for micro-movements
-MinCPU_Delay = 0.001
+JitterAmount = 0.7  # Reduced to prevent excessive jitter
+MicroMovementChance = 0.03  # Lower chance for micro-movements
+MinCPU_Delay = 0.02
 CPU_Time = 0.001
-CheckRequiredModules = False
 
 # Functions
 
@@ -40,37 +38,14 @@ def is_admin():
         return False
 
 if not is_admin():
-    print("Restarting as admin...")
     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
-    sys.exit("Script restarted with admin privileges.")
-
-# Check for Requirments
-def CheckRequirements():
-    import subprocess
-    import sys
-    import importlib.util
-
-    required_modules = ['pyautogui', 'keyboard', 'pygetwindow', 'win32api', 'mouse']
-
-    def install_module(module_name):
-        try:
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', module_name])
-            return True
-        except subprocess.CalledProcessError:
-            return False
-
-    for module in required_modules:
-        if not importlib.util.find_spec(module):
-            print(f"{module} is missing. Installing...")
-            if not install_module(module):
-                print(f"Failed to install {module}. Try installing manually.")
-
-    print("Module check completed.")
+    sys.exit()
 
 # Mouse Movement
 def HumanMove(Target):
-  
+    """Moves the mouse in a human-like way with dynamically adjusted points."""
     def CalculatePointsNumber(Start, End):    
+      """Dynamically adjust the number of points based on distance."""
       Distance = math.dist(Start, End)
       return min(MaxPoints, max(BasePoints, int(Distance / 10)))  # Scale based on distance
 
@@ -98,11 +73,12 @@ def HumanMove(Target):
     
      return points
 
-    MoveDuration = random.uniform(*HumanMoveDuration)-CPU_Time
-
     # Move like a human so no detection happens  
-    Points = HumanCurve(pyautogui.position(), Target)   
+    Points = HumanCurve(pyautogui.position(), Target) 
+
+    MoveDuration = random.uniform(*HumanMoveDuration)-CPU_Time  
     TimePerPoint = max(0.001, (MoveDuration / len(Points)) - CPU_Time)
+
     for Point in Points:
       pyautogui.moveTo(*Point, duration=0)    
       time.sleep(TimePerPoint* random.uniform(0.1, 0.9))
@@ -118,7 +94,8 @@ def HumanMove(Target):
 # Mouse Input 
 def HumanClick(Target):
     # Random mouse click duration
-    ClickDuration = random.uniform(*ClickRange) - CPU_Time
+    ClickDuration = random.uniform(*ClickDelay) - CPU_Time
+
     # Mouse down
     pyautogui.mouseDown()
 
@@ -134,8 +111,36 @@ def HumanClick(Target):
         
     
     pyautogui.mouseUp()
-    # time.sleep(random.uniform(0.03, 0.1))
+    time.sleep(random.uniform(0.03, 0.1))
  
+# Search for Input events
+def GetInputEventsFromFile(filename):
+    # Construct events variable
+    events = []
+
+    # Check if provided path is valid
+    if not os.path.exists(filename):
+        raise FileNotFoundError(f"Input file {filename} not found!")
+    
+    # Open file
+    with open(filename, 'r') as file:
+        for line_num, line in enumerate(file, 1):
+            line = line.strip()
+            if not line:
+                continue
+            parts = [part.strip() for part in line.split(',')]
+            if len(parts) != 4:
+                print(f"Skipping invalid line {line_num}: {line}")
+                continue
+            try:
+                x, y, action, ActionDelay = parts
+                events.append((int(x), int(y), action, int(ActionDelay)))
+            except ValueError:
+                print(f"Skipping line {line_num} with invalid format: {line}")
+
+    # Return found events            
+    return events
+
 # Focus on App Window
 def FocusOnWindow():
        
@@ -175,27 +180,16 @@ def RefreshAppWindow():
         return
     
     # Get all windows and try to find a matching title
-    FoundWindows = gw.getAllTitles()
-      
-    for WindowTitle in FoundWindows:
-        if AppTitle.lower() in WindowTitle.lower():
-            windows = gw.getWindowsWithTitle(WindowTitle)
-            if windows:  # Check if any windows were found
-                AppWindow = windows[0]  # Store single window object, not list
-                print(f"Found window: {WindowTitle}")
-                return True
-    
-    # If couldn't find a window by provided title, give the user options of all available windwos
-    if not AppWindow:
-         # Print all windows
-         for i, title in enumerate(FoundWindows, 1):
-          print(f"{i}. {title}")
+    FoundWindows = [win for win in gw.getAllWindows() if win.title.strip()]
 
-         # Try to get an input of user to select a window
-         try:
+    for i, win in enumerate(FoundWindows, 1):
+      print(f"{i}. {win.title}") 
+    
+    # Try to get an input of user to select a window
+    try:
           Selection = int(input("Enter the number of the app window: ")) -1
           if 0 <= Selection < len(FoundWindows):
-              SelectedTitle = FoundWindows[Selection]
+              SelectedTitle = FoundWindows[Selection].title
               windows = gw.getWindowsWithTitle(SelectedTitle)
               if windows:
                 AppWindow = windows[0]  # Store single window object
@@ -204,7 +198,7 @@ def RefreshAppWindow():
           else:
             raise IndexError
 
-         except (ValueError, IndexError):
+    except (ValueError, IndexError):
           print("Invalid selection. Please manually set AppTitle in the script.")
           input("Press Enter to exit...")
           return    
@@ -214,53 +208,22 @@ def RefreshAppWindow():
          print("Invalid App Window, please try again")
          input("Press Enter to exit...")
 
-# Search for Input events
-def GetInputEventsFromFile(filename):
-    # Construct events variable
-    events = []
-
-    # Check if provided path is valid
-    if not os.path.exists(filename):
-        raise FileNotFoundError(f"Input file {filename} not found!")
-    
-    # Open file
-    with open(filename, 'r') as file:
-        for line_num, line in enumerate(file, 1):
-            line = line.strip()
-            if not line:
-                continue
-            parts = [part.strip() for part in line.split(',')]
-            if len(parts) != 3:
-                print(f"Skipping invalid line {line_num}: {line}")
-                continue
-            try:
-                x, y, action = parts
-                events.append((int(x), int(y), action))
-            except ValueError:
-                print(f"Skipping line {line_num} with invalid format: {line}")
-
-    # Return found events            
-    return events
-
 # Inputs Simulation
 def SimulateInputEvents(Events, Loops):
    
    # Loop broken flag
    LoopBroken = False
-
-   # Break the loop
+   
    def BreakLoop():
       nonlocal LoopBroken 
       LoopBroken = True
       print("\n Stopping Now")
-
+   
    keyboard.add_hotkey(StopKey, BreakLoop)
 
    # Start the simulation Loop
    try:
-      # innitialize loop count
       CurrentLoop = 0
-      # start the loop
       while not LoopBroken and (Loops == 0 or CurrentLoop < Loops):                
          CurrentLoop += 1        
 
@@ -271,10 +234,9 @@ def SimulateInputEvents(Events, Loops):
                 
                 if not FocusOnWindow():
                     print("Failed to focus app window!")
-                    time.sleep(2)
                     return
 
-                X, Y, Action= Event
+                X, Y, Action, ActionDelay= Event
 
                 # Screen Size
                 ScreenWidth, ScreenHeight = pyautogui.size()
@@ -286,22 +248,22 @@ def SimulateInputEvents(Events, Loops):
                                
                 # Move Mouse
                 HumanMove(TargetPosition)
-
-                # Mouse Action
                 if Action == 'Left Click':
-                    HumanClick(TargetPosition)   
+                  HumanClick(TargetPosition)   
 
-               # StartTime = time.time()
-               # while (time.time() - StartTime) < 0.2:
-                #    time.sleep(MinCPU_Delay)  
-                 #   
-                  #  # Random tiny movements during waiting
-                   # if random.random() < 0.2:
-                    #    pyautogui.moveRel(
-                     #       random.uniform(-2, 2),
-                      #      random.uniform(-2, 2),
-                       #     duration=random.uniform(0.05, 0.1)
-                        #)         
+                DelayForNextInput = (ActionDelay /1000) * random.uniform(0.9, 1.1)
+
+                StartTime = time.time()
+                while (time.time() - StartTime) < DelayForNextInput:
+                    time.sleep(min(0.1, DelayForNextInput))  
+                    
+                    # Random tiny movements during waiting
+                    if random.random() < 0.2:
+                        pyautogui.moveRel(
+                            random.uniform(-2, 2),
+                            random.uniform(-2, 2),
+                            duration=random.uniform(0.05, 0.1)
+                        )         
 
    # On the end unhook stop key.
    finally:
@@ -310,12 +272,9 @@ def SimulateInputEvents(Events, Loops):
 # Main
 
 def main():
-
-    if CheckRequiredModules:
-       CheckRequirements()
-
     try:
-      print("IMPORTANT: Don't make a pattern that keeps the mouse same place for too long, so the code doesn't get detected!")
+      print("IMPORTANT: Don't make a pattern that keeps the mouse in same place for too long, so the code doesn't get detected!")
+      
       # Provide settings data
       print(f"\nInput events file: {InputEventsFile}")
       print(f"Stop Key: {StopKey.upper()}")
@@ -330,7 +289,6 @@ def main():
          return
       
       # Try to refresh the app window
-
       RefreshAppWindow()
 
       # Get Loops count
