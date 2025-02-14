@@ -15,7 +15,7 @@ def main():
           x, y = pyautogui.position()
           RelativeX = x - CenterX
           RelativeY = y - CenterY
-          sys.stdout.write(f"\rRelative Mouse Position = ({RelativeX}, {RelativeY})")
+          sys.stdout.write(f"\rRelative Mouse Position = ({RelativeX}, {RelativeY}) | Current Position = ({x}, {y})")
           sys.stdout.flush()
           time.sleep(MinCPU_Delay)  # Reduce CPU usage
 

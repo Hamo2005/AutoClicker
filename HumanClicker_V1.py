@@ -94,7 +94,6 @@ def human_click():
         )
     
     pyautogui.mouseUp()
-    time.sleep(random.uniform(0.03, 0.1))
 
 def parse_input_file(filename):
     events = []
@@ -161,7 +160,7 @@ def simulate_events(events, loops):
         current_loop = 0
         while not stop_flag and (loops == 0 or current_loop < loops):
             current_loop += 1
-            print(f"\nStarting loop {current_loop}")
+            
             
             for event_num, event in enumerate(events, 1):
                 if stop_flag:
@@ -169,12 +168,11 @@ def simulate_events(events, loops):
                     return
                 
                 if not focus_game_window():
-                    print("Failed to focus game window! Retrying in 2 seconds...")
+                    print("Failed to focus game window!")
                     time.sleep(2)
-                    continue
+                    return
                 
                 x, y, action, delay_ms = event
-                print(f"Event {event_num}: Moving to ({x}, {y}) - {action}", end='\r')
                 
                 # Human-like movement
                 human_move_to(x, y)
@@ -260,6 +258,7 @@ def main():
             time.sleep(1)
         print("GO!")
         
+        print(f"\nRunning Script, Current time: {time.ctime(time.time())}")
         simulate_events(events, loops)
         
     except Exception as e:
@@ -271,6 +270,7 @@ def main():
     
     finally:
         print("\nScript finished.")
+        print(f"\nScript finished, Current time: {time.ctime(time.time())}")
         input("Press Enter to exit...")
 
 if __name__ == "__main__":

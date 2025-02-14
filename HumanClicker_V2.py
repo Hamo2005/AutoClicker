@@ -111,7 +111,6 @@ def HumanClick(Target):
         
     
     pyautogui.mouseUp()
-    time.sleep(random.uniform(0.03, 0.1))
  
 # Search for Input events
 def GetInputEventsFromFile(filename):
@@ -225,7 +224,8 @@ def SimulateInputEvents(Events, Loops):
    try:
       CurrentLoop = 0
       while not LoopBroken and (Loops == 0 or CurrentLoop < Loops):                
-         CurrentLoop += 1        
+         CurrentLoop += 1    
+         print(f"Current Loop: {CurrentLoop}")         
 
          for Event in Events:
                 if LoopBroken:   
