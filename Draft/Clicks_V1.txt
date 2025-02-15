@@ -1,26 +1,24 @@
 1273, 676, Left Click, 390
+725, 523, Left Click, 245
+723, 572, Left Click, 289
+1001, 748, Left Click, 289
+
 772, 452, Left Click, 230
 667, 455, Left Click, 278
 721, 398, Left Click, 245
 725, 503, Left Click, 293
-1001, 748, Left Click, 207
-1273, 676, Left Click, 289
+
 667, 399, Left Click, 230
 774, 510, Left Click, 289
 765, 407, Left Click, 245
 655, 485, Left Click, 230
-1001, 748, Left Click, 289
-1273, 676, Left Click, 230
+
 776, 423, Left Click, 289
 657, 473, Left Click, 390
 774, 473, Left Click, 245
 663, 423, Left Click, 245
-1001, 748, Left Click, 230
-1273, 676, Left Click, 289
+
 742, 391, Left Click, 230
 685, 503, Left Click, 245
 694, 398, Left Click, 289
 741, 507, Left Click, 390
-725, 523, Left Click, 245
-723, 572, Left Click, 289
-1001, 748, Left Click, 289

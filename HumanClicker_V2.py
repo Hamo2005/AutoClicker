@@ -15,7 +15,7 @@ InputEventsFile = r"E:\AutoClicker\Clicks_V2.txt"
 StopKey = "esc"
 
 # Advanced
-ClickDelay = (0.3, 0.1)
+ClickDelayRange = (0.3, 0.1)
 HumanMoveDuration = (0.01, 0.1) # Random movement duration range
 
 # Human Curve
@@ -94,7 +94,7 @@ def HumanMove(Target):
 # Mouse Input 
 def HumanClick(Target):
     # Random mouse click duration
-    ClickDuration = random.uniform(*ClickDelay) - CPU_Time
+    ClickDuration = random.uniform(*ClickDelayRange) - CPU_Time
 
     # Mouse down
     pyautogui.mouseDown()
@@ -216,7 +216,7 @@ def SimulateInputEvents(Events, Loops):
    def BreakLoop():
       nonlocal LoopBroken 
       LoopBroken = True
-      print("\n Stopping Now")
+      print("\nStopping Now")
    
    keyboard.add_hotkey(StopKey, BreakLoop)
 
@@ -264,6 +264,7 @@ def SimulateInputEvents(Events, Loops):
                             random.uniform(-2, 2),
                             duration=random.uniform(0.05, 0.1)
                         )         
+         time.sleep(random.uniform(0.2, 1))
 
    # On the end unhook stop key.
    finally:
@@ -304,8 +305,8 @@ def main():
        print(f"{i}...")
        time.sleep(1)
       print("GO!")
-
-      print(f"\nRunning Script, Current time: {time.ctime(time.time())}")
+      StartTime = time.localtime()
+      print(f"\nRunning Script, Current time: {time.strftime('%a %H:%M', StartTime)}")
       SimulateInputEvents(InputEvents, Loops)
 
     # if any error happened
@@ -318,7 +319,10 @@ def main():
     
     # Ending
     finally:
-        print(f"\nScript finished, Current time: {time.ctime(time.time())}")
+        FinishTime = time.localtime()
+        print(f"\nScript finished, Current time: {time.strftime('%a %H:%M', FinishTime)}")
+        ElapsedTime = int(time.mktime(FinishTime) - time.mktime(StartTime))
+        print(f"\nPlayed For: {ElapsedTime // 86400} days, {ElapsedTime // 3600 % 24} hours, and {ElapsedTime // 60 % 60} minutes")
         input("Press Enter to exit...")
 
 if __name__ == "__main__":

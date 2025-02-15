@@ -10,7 +10,7 @@ import traceback
 from win32api import GetSystemMetrics
 
 # Configuration
-INPUT_FILE = r"E:\AutoClicker\Clicks_V1.txt"
+INPUT_FILE = r"E:\AutoClicker\Draft\Clicks_V1.txt"
 STOP_KEY = "esc"
 CLICK_DELAY = 0.1
 GAME_WINDOW_TITLE = "Your Game Window"
