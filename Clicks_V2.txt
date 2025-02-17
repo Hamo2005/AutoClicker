@@ -1,24 +1,24 @@
-553, 226, Left Click, 390
-5, 73, Left Click, 245
-3, 122, Left Click, 289
-281, 298, Left Click, 289
+553, 226, Left Click
+5, 73, Left Click
+3, 122, Left Click
+281, 298, Left Click
 
-52, 0, Left Click, 230
--53, 0, Left Click, 278
-0, -52, Left Click, 245
-0, 53, Left Click, 293
+52, 0, Left Click
+-53, 0, Left Click
+0, -52, Left Click
+0, 53, Left Click
 
--53, -51, Left Click, 230
-54, 60, Left Click, 289
-45, -43, Left Click, 245
--65, 35, Left Click, 230
+-53, -51, Left Click
+54, 60, Left Click
+45, -43, Left Click
+-65, 35, Left Click
 
-56, -27, Left Click, 289
--63, 23, Left Click, 390
-54, 23, Left Click, 245
--57, -27, Left Click, 245
+56, -27, Left Click
+-63, 23, Left Click
+54, 23, Left Click
+-57, -27, Left Click
 
-22, -59, Left Click, 230
--35, 53, Left Click, 245
--26, -52, Left Click, 289
-21, 57, Left Click, 390
+22, -59, Left Click
+-35, 53, Left Click
+-26, -52, Left Click
+21, 57, Left Click

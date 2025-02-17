@@ -17,6 +17,7 @@ StopKey = "esc"
 # Advanced
 ClickDelayRange = (0.3, 0.1)
 HumanMoveDuration = (0.01, 0.1) # Random movement duration range
+UseCurve = False
 
 # Human Curve
 BasePoints = 2 # Minimum number of points
@@ -77,19 +78,24 @@ def HumanMove(Target):
     Points = HumanCurve(pyautogui.position(), Target) 
 
     MoveDuration = random.uniform(*HumanMoveDuration)-CPU_Time  
-    TimePerPoint = max(0.001, (MoveDuration / len(Points)) - CPU_Time)
 
-    for Point in Points:
-      pyautogui.moveTo(*Point, duration=0)    
-      time.sleep(TimePerPoint* random.uniform(0.1, 0.9))
+    if UseCurve:
+        # Use a simulated Human Curve
+     TimePerPoint = max(0.001, (MoveDuration / len(Points)) - CPU_Time)
+     for Point in Points:
+       pyautogui.moveTo(*Point, duration=0)    
+       time.sleep(TimePerPoint* random.uniform(0.1, 0.9))
 
-      # Occasionally add tiny micro-movements
-      if random.random() < MicroMovementChance:
-            pyautogui.moveRel(
-                random.uniform(-1, 1),
-                random.uniform(-1, 1),
-                duration=random.uniform(0.02, 0.05)
-            )
+       # Occasionally add tiny micro-movements
+       if random.random() < MicroMovementChance:
+             pyautogui.moveRel(
+                 random.uniform(-1, 1),
+                 random.uniform(-1, 1),
+                 duration=random.uniform(0.02, 0.05)
+             )
+    else: 
+         # Move Directly
+          pyautogui.moveTo(*Target, duration=MoveDuration)       
 
 # Mouse Input 
 def HumanClick(Target):
@@ -108,8 +114,7 @@ def HumanClick(Target):
             random.uniform(-0.5, 0.5),
             duration=0.01
         )
-        
-    
+    # Mouse Up             
     pyautogui.mouseUp()
  
 # Search for Input events
@@ -128,12 +133,12 @@ def GetInputEventsFromFile(filename):
             if not line:
                 continue
             parts = [part.strip() for part in line.split(',')]
-            if len(parts) != 4:
+            if len(parts) != 3:
                 print(f"Skipping invalid line {line_num}: {line}")
                 continue
             try:
-                x, y, action, ActionDelay = parts
-                events.append((int(x), int(y), action, int(ActionDelay)))
+                x, y, action = parts
+                events.append((int(x), int(y), action))
             except ValueError:
                 print(f"Skipping line {line_num} with invalid format: {line}")
 
@@ -141,8 +146,7 @@ def GetInputEventsFromFile(filename):
     return events
 
 # Focus on App Window
-def FocusOnWindow():
-       
+def FocusOnWindow():     
     try:
         # First, import pygetwindow
         try:
@@ -236,7 +240,7 @@ def SimulateInputEvents(Events, Loops):
                     print("Failed to focus app window!")
                     return
 
-                X, Y, Action, ActionDelay= Event
+                X, Y, Action= Event
 
                 # Screen Size
                 ScreenWidth, ScreenHeight = pyautogui.size()
@@ -250,20 +254,6 @@ def SimulateInputEvents(Events, Loops):
                 HumanMove(TargetPosition)
                 if Action == 'Left Click':
                   HumanClick(TargetPosition)   
-
-                DelayForNextInput = (ActionDelay /1000) * random.uniform(0.9, 1.1)
-
-                StartTime = time.time()
-                while (time.time() - StartTime) < DelayForNextInput:
-                    time.sleep(min(0.1, DelayForNextInput))  
-                    
-                    # Random tiny movements during waiting
-                    if random.random() < 0.2:
-                        pyautogui.moveRel(
-                            random.uniform(-2, 2),
-                            random.uniform(-2, 2),
-                            duration=random.uniform(0.05, 0.1)
-                        )         
          time.sleep(random.uniform(0.2, 1))
 
    # On the end unhook stop key.
@@ -274,11 +264,9 @@ def SimulateInputEvents(Events, Loops):
 
 def main():
     try:
-      print("IMPORTANT: Don't make a pattern that keeps the mouse in same place for too long, so the code doesn't get detected!")
-      
       # Provide settings data
-      print(f"\nInput events file: {InputEventsFile}")
-      print(f"Stop Key: {StopKey.upper()}")
+      print(f"Input events file: {InputEventsFile}")
+      print(f"Stop Key: {StopKey.upper()}\n")
       
 
       # Try to ge the events from the given file
@@ -307,6 +295,8 @@ def main():
       print("GO!")
       StartTime = time.localtime()
       print(f"\nRunning Script, Current time: {time.strftime('%a %H:%M', StartTime)}")
+
+      # Start Simulation
       SimulateInputEvents(InputEvents, Loops)
 
     # if any error happened

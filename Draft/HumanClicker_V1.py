@@ -181,22 +181,22 @@ def simulate_events(events, loops):
                     human_click()
                 
                 # Randomized delay handling
-                base_delay = delay_ms / 1000
-                actual_delay = base_delay * random.uniform(0.9, 1.1)
-                delay_remaining = actual_delay
+               # base_delay = delay_ms / 1000
+               # actual_delay = base_delay * random.uniform(0.9, 1.1)
+               # delay_remaining = actual_delay
                 
-                while delay_remaining > 0 and not stop_flag:
-                    step = min(0.1, delay_remaining)
-                    time.sleep(step)
-                    delay_remaining -= step
+                #while delay_remaining > 0 and not stop_flag:
+                #    step = min(0.1, delay_remaining)
+                 #   time.sleep(step)
+                  #  delay_remaining -= step
                     
                     # Random tiny movements during waiting
-                    if random.random() < 0.2:
-                        pyautogui.moveRel(
-                            random.uniform(-2, 2),
-                            random.uniform(-2, 2),
-                            duration=random.uniform(0.05, 0.1)
-                        )
+                   # if random.random() < 0.2:
+                    #    pyautogui.moveRel(
+                     #       random.uniform(-2, 2),
+                      #      random.uniform(-2, 2),
+                       #     duration=random.uniform(0.05, 0.1)
+                        #)
     finally:
         keyboard.unhook_all()
 
