@@ -9,6 +9,7 @@ import ctypes
 import sys
 import traceback
 from win32api import GetSystemMetrics
+pyautogui.FAILSAFE = False
 
 # Configuration
 InputEventsFile = r"E:\AutoClicker\Clicks_V2.txt"
